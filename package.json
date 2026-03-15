@@ -1,0 +1,23 @@
+{
+  "name": "testomatio-tools",
+  "version": "1.0.0",
+  "description": "Testomatio DevOps tools powered by Bunosh",
+  "type": "module",
+  "bin": {
+    "testomatio-tools": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "Bunoshfile.js"
+  ],
+  "scripts": {
+    "s3:cleanup": "bunosh s3:cleanup",
+    "s3:cleanup:dry": "bunosh s3:cleanup --dry-run",
+    "s3:breakdown": "bunosh s3:breakdown"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.699.0",
+    "bunosh": "^0.4.14",
+    "dotenv": "^16.4.5"
+  }
+}
