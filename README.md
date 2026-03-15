@@ -1,18 +1,26 @@
-# S3 Cleanup
+# Testomatio Tools
 
-S3 bucket cleanup and analysis scripts built with [Bunosh](https://github.com/davertmik/bunosh).
+DevOps tools for [Testomat.io](https://testomat.io) powered by [Bunosh](https://github.com/davertmik/bunosh).
 
-## Setup
+## Usage
 
-1. Install dependencies (works with both npm and bun):
+Run directly with npx (no installation needed):
 
 ```bash
-npm install
-# or
-bun install
+npx testomatio-tools s3:breakdown
+npx testomatio-tools s3:cleanup --dry-run
 ```
 
-2. Create a `.env` file with your S3 credentials:
+Or install globally:
+
+```bash
+npm install -g testomatio-tools
+testomatio-tools s3:cleanup
+```
+
+## Configuration
+
+Create a `.env` file in your working directory with S3 credentials:
 
 ```
 S3_ACCESS_KEY_ID=your_access_key_id
@@ -29,7 +37,7 @@ S3_REGION=your_s3_region
 Read-only analysis showing monthly breakdown by run count and size.
 
 ```bash
-bunosh s3:breakdown
+npx testomatio-tools s3:breakdown
 ```
 
 Example output:
@@ -48,19 +56,19 @@ Delete objects older than a given threshold (default: 6 months).
 
 ```bash
 # Preview what would be deleted
-bunosh s3:cleanup --dry-run
+npx testomatio-tools s3:cleanup --dry-run
 
 # Delete objects older than 6 months (with confirmation prompt)
-bunosh s3:cleanup
+npx testomatio-tools s3:cleanup
 
 # Delete objects older than 3 months
-bunosh s3:cleanup 3
+npx testomatio-tools s3:cleanup 3
 
 # Skip confirmation prompt
-bunosh s3:cleanup --force
+npx testomatio-tools s3:cleanup --force
 
 # Combine options
-bunosh s3:cleanup 12 --dry-run
+npx testomatio-tools s3:cleanup 12 --dry-run
 ```
 
 | Argument / Option | Description | Default |
@@ -78,13 +86,3 @@ bunosh s3:cleanup 12 --dry-run
 | `S3_BUCKET` | Target bucket name |
 | `S3_ENDPOINT` | S3-compatible endpoint URL |
 | `S3_REGION` | S3 region |
-
-## npm scripts
-
-If you prefer npm/bun scripts over the `bunosh` CLI:
-
-```bash
-npm run s3:breakdown
-npm run s3:cleanup
-npm run s3:cleanup:dry
-```
