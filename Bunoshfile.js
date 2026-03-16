@@ -1,6 +1,6 @@
 import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
 
-const { exec, task, say, ask, yell } = global.bunosh;
+const { exec, task, stopOnFailures, say, ask, yell } = global.bunosh;
 
 const MILLISECONDS_IN_MONTH = 30 * 24 * 60 * 60 * 1000;
 
@@ -69,22 +69,25 @@ function getMonthYear(date) {
 /**
  * Delete S3 objects older than specified months threshold
  * @param {number} months - Age threshold in months (default: 6)
- * @param {object} options
- * @param {boolean} [options.dryRun=false] - Preview deletions without executing
- * @param {boolean} [options.force=false] - Skip confirmation prompt
+ * @param {object} opts
+ * @param {boolean} [opts.dryRun=false] - Preview deletions without executing
+ * @param {boolean} [opts.force=false] - Skip confirmation prompt
  */
-export async function s3Cleanup(months = 6, options = { dryRun: false, force: false }) {
-  task.stopOnFailures();
+export async function s3Cleanup(months = 6, opts = { dryRun: false, force: false }) {
+  stopOnFailures();
+  const dryRun = arguments[1];
+  const force = arguments[2];
 
   const s3 = getS3Client();
   if (!s3) return;
 
   const bucket = process.env.S3_BUCKET;
-  const mode = options.dryRun ? 'DRY RUN' : 'LIVE';
+  const mode = dryRun ? 'DRY RUN' : 'LIVE';
 
   say(`S3 Cleanup [${mode}] — Bucket: ${bucket}, Threshold: ${months} months`);
 
-  const allObjects = await task('Fetching objects from S3', () => listAllObjects(s3, bucket));
+  say('Fetching objects from S3...');
+  const allObjects = await listAllObjects(s3, bucket);
   say(`Found ${allObjects.length} total objects`);
 
   const cutoffDate = new Date(Date.now() - months * MILLISECONDS_IN_MONTH);
@@ -100,14 +103,14 @@ export async function s3Cleanup(months = 6, options = { dryRun: false, force: fa
   const totalSize = oldObjects.reduce((sum, obj) => sum + obj.Size, 0);
   say(`Objects to delete: ${oldObjects.length} (${formatBytes(totalSize)})`);
 
-  if (options.dryRun) {
+  if (dryRun) {
     const latestModification = new Date(Math.max(...oldObjects.map(obj => new Date(obj.LastModified).getTime())));
     say(`Latest modification date: ${latestModification.toISOString()}`);
     say('DRY RUN — no objects deleted');
     return;
   }
 
-  if (!options.force) {
+  if (!force) {
     const proceed = await ask(`Delete ${oldObjects.length} objects (${formatBytes(totalSize)})?`, false);
     if (!proceed) {
       say('Aborted.');
@@ -143,7 +146,7 @@ export async function s3Cleanup(months = 6, options = { dryRun: false, force: fa
  * Show monthly breakdown of S3 bucket usage by size and run count
  */
 export async function s3Breakdown() {
-  task.stopOnFailures();
+  stopOnFailures();
 
   const s3 = getS3Client();
   if (!s3) return;
@@ -151,7 +154,8 @@ export async function s3Breakdown() {
   const bucket = process.env.S3_BUCKET;
   say(`S3 Breakdown — Bucket: ${bucket}`);
 
-  const allObjects = await task('Fetching objects from S3', () => listAllObjects(s3, bucket));
+  say('Fetching objects from S3...');
+  const allObjects = await listAllObjects(s3, bucket);
   say(`Found ${allObjects.length} total objects`);
 
   const monthlyData = {};
